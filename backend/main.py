@@ -28,7 +28,16 @@ from auth import create_access_token
 # =========================
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://fraud-mlops-system.onrender.com",
+        "https://fraud-mlops-system.vercel.app/"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # =========================
 # CORS
