@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+
+  backend:
+
+    build: ./backend
+
+    container_name: fraud-backend
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./backend:/app
+
+    depends_on:
+      - mongodb
+
+  frontend:
+
+    build: ./frontend
+
+    container_name: fraud-frontend
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./frontend:/app
+
+    depends_on:
+      - backend
+
+  mongodb:
+
+    image: mongo
+
+    container_name: fraud-mongodb
+
+    ports:
+      - "27017:27017"
+
+  mlflow:
+
+    image: python:3.10
+
+    container_name: fraud-mlflow
+
+    working_dir: /app
+
+    volumes:
+      - .:/app
+
+    command: >
+      bash -c "pip install mlflow &&
+      mlflow ui --host 0.0.0.0"
+
+    ports:
+      - "5000:5000"

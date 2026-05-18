@@ -1,0 +1,530 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from typing import List
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import getSampleStyleSheet
+
+from typing import List
+import numpy as np
+import joblib
+
+from database.db import (
+    users_collection,
+    prediction_collection
+)
+
+from auth import create_access_token
+
+
+# =========================
+# FASTAPI APP
+# =========================
+
+app = FastAPI()
+
+
+# =========================
+# CORS
+# =========================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# =========================
+# LOAD MODEL
+# =========================
+model = joblib.load(
+    "saved_models/fraud_model.pkl"
+)
+
+# =========================
+# INPUT SCHEMA
+# =========================
+
+
+class Transaction(BaseModel):
+
+    features: List[float]
+
+
+# =========================
+# HOME ROUTE
+# =========================
+
+@app.get("/")
+def home():
+
+    return {
+
+        "message":
+        "Fraud Detection API Running"
+
+    }
+
+
+# =========================
+# PREDICTION ROUTE
+# =========================
+
+@app.post("/predict")
+def predict(transaction: Transaction):
+
+    try:
+
+        # VALIDATION
+
+        if len(transaction.features) != 30:
+
+            return {
+
+                "message":
+                "Exactly 30 features required"
+
+            }
+
+        # CONVERT TO NUMPY
+
+        input_data = np.array(
+    transaction.features
+).reshape(1, -1)
+
+        # MODEL PREDICTION
+
+        prediction = model.predict(
+            input_data
+        )[0]
+
+        # FRAUD PROBABILITY
+
+        probability = model.predict_proba(
+            input_data
+        )[0][1]
+
+        # RESULT OBJECT
+
+        result = {
+
+            "features":
+            transaction.features,
+
+            "fraud_prediction":
+            int(prediction),
+
+            "fraud_probability":
+            float(probability),
+
+            "email":
+            transaction.email
+
+        }
+
+        # STORE IN DATABASE
+
+        prediction_collection.insert_one(
+            result
+        )
+
+        # RETURN RESPONSE
+
+        return {
+
+            "fraud_prediction":
+            int(prediction),
+
+            "fraud_probability":
+            float(probability)
+
+        }
+
+    except Exception as e:
+
+        print(e)
+
+        return {
+
+            "message":
+            str(e)
+
+        }
+
+
+# =========================
+# HISTORY ROUTE
+# =========================
+
+@app.get("/history/{email}")
+def get_history(email: str):
+
+    history = list(
+
+        prediction_collection.find(
+
+            {
+                "email": email
+            },
+
+            {
+                "_id": 0
+            }
+
+        )
+
+    )
+
+    return history
+
+
+# =========================
+# ALERTS ROUTE
+# =========================
+
+@app.get("/alerts")
+def get_alerts():
+
+    alerts = list(
+
+        prediction_collection.find(
+
+            {
+                "fraud_prediction": 1
+            },
+
+            {
+                "_id": 0
+            }
+
+        )
+
+    )
+
+    return alerts
+
+
+# =========================
+# REPORT ROUTE
+# =========================
+
+@app.get("/report")
+def generate_report():
+
+    data = list(
+
+        prediction_collection.find(
+
+            {},
+            {"_id": 0}
+
+        )
+
+    )
+
+    total_transactions = len(data)
+
+    fraud_cases = len(
+
+        [
+
+            x for x in data
+
+            if x["fraud_prediction"] == 1
+
+        ]
+
+    )
+
+    safe_cases = (
+        total_transactions - fraud_cases
+    )
+
+    fraud_rate = (
+
+        (fraud_cases / total_transactions)
+        * 100
+
+        if total_transactions > 0
+        else 0
+
+    )
+
+    return {
+
+        "total_transactions":
+        total_transactions,
+
+        "fraud_cases":
+        fraud_cases,
+
+        "safe_cases":
+        safe_cases,
+
+        "fraud_rate":
+        round(fraud_rate, 2)
+
+    }
+
+
+# =========================
+# SIGNUP ROUTE
+# =========================
+
+@app.post("/signup")
+def signup(user: dict):
+
+    existing_user = users_collection.find_one(
+
+        {
+
+            "email":
+            user["email"]
+
+        }
+
+    )
+
+    if existing_user:
+
+        return {
+
+            "message":
+            "User already exists"
+
+        }
+
+    users_collection.insert_one(user)
+
+    return {
+
+        "message":
+        "Signup successful"
+
+    }
+
+
+# =========================
+# LOGIN ROUTE
+# =========================
+
+@app.post("/login")
+def login(user: dict):
+
+    try:
+
+        existing_user = users_collection.find_one(
+
+            {
+
+                "email":
+                user["email"],
+
+                "password":
+                user["password"]
+
+            }
+
+        )
+
+        if not existing_user:
+
+            return {
+
+                "message":
+                "Invalid credentials"
+
+            }
+
+        token = create_access_token(
+
+            {
+
+                "sub":
+                user["email"]
+
+            }
+
+        )
+
+        return {
+
+            "access_token":
+            token,
+
+            "email":
+            user["email"]
+
+        }
+
+    except Exception as e:
+
+        print(e)
+
+        return {
+
+            "message":
+            "Login failed"
+
+        }
+
+
+# =========================
+# DOWNLOAD PDF REPORT
+# =========================
+
+@app.get("/download-report")
+def download_report():
+
+    file_name = "fraud_report.pdf"
+
+    doc = SimpleDocTemplate(file_name)
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    title = Paragraph(
+        "Fraud Detection Report",
+        styles['Title']
+    )
+
+    elements.append(title)
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    data = list(
+
+        prediction_collection.find(
+
+            {},
+            {"_id": 0}
+
+        )
+
+    )
+
+    total = len(data)
+
+    frauds = len(
+
+        [
+
+            x for x in data
+
+            if x["fraud_prediction"] == 1
+
+        ]
+
+    )
+
+    safe = total - frauds
+
+    fraud_rate = (
+
+        (frauds / total) * 100
+
+        if total > 0
+
+        else 0
+
+    )
+
+    report_text = f"""
+
+    Total Transactions: {total}
+    <br/><br/>
+
+    Fraud Cases: {frauds}
+    <br/><br/>
+
+    Safe Transactions: {safe}
+    <br/><br/>
+
+    Fraud Rate: {round(fraud_rate, 2)}%
+
+    """
+
+    paragraph = Paragraph(
+
+        report_text,
+
+        styles['BodyText']
+
+    )
+
+    elements.append(paragraph)
+
+    doc.build(elements)
+
+    return FileResponse(
+
+        file_name,
+
+        media_type='application/pdf',
+
+        filename=file_name
+
+    )
+@app.get("/analytics")
+def analytics():
+
+    data = list(
+        prediction_collection.find(
+            {},
+            {"_id": 0}
+        )
+    )
+
+    total = len(data)
+
+    fraud = len(
+        [
+            x for x in data
+            if x["fraud_prediction"] == 1
+        ]
+    )
+
+    safe = total - fraud
+
+    fraud_rate = (
+        (fraud / total) * 100
+        if total > 0
+        else 0
+    )
+
+    return {
+
+        "total_transactions": total,
+
+        "fraud_transactions": fraud,
+
+        "safe_transactions": safe,
+
+        "fraud_rate": round(
+            fraud_rate,
+            2
+        ),
+
+        "chart_data": [
+            {
+                "name": "Fraud",
+                "value": fraud
+            },
+            {
+                "name": "Safe",
+                "value": safe
+            }
+        ]
+    }

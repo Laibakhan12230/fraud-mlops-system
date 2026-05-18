@@ -1,0 +1,23 @@
+artifact_path: file:///C:/Users/HP/fraud-mlops/backend/mlruns/1/models/m-f78b741099b94ec286aa2eb2acfdd58a/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.10.11
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.2
+    skops_trusted_types: null
+mlflow_version: 3.12.0
+model_id: m-f78b741099b94ec286aa2eb2acfdd58a
+model_size_bytes: 179619
+model_uuid: m-f78b741099b94ec286aa2eb2acfdd58a
+prompts: null
+run_id: 4877603aa39c430ca12cb4d3332cf870
+utc_time_created: '2026-05-16 12:46:51.781053'
