@@ -1,6 +1,12 @@
 data/
 mlruns/
+node_modules/
 __pycache__/
 *.pyc
 .env
-node_modules/
+dist/
+build/
+.venv/
+venv/
+saved_models/
+*.pkl
