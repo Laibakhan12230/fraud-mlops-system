@@ -1,14 +1,11 @@
 from pymongo import MongoClient
+import os
 
-# MongoDB Connection
 client = MongoClient(
-    "mongodb://mongodb:27017"
+    os.getenv("mongodb+srv://Laiba_khan:Laibanaaz1234@cluster0.839rxof.mongodb.net/?appName=Cluster0")
 )
 
-# Database
 db = client["fraud_detection"]
-
-# Collections
 
 prediction_collection = db["predictions"]
 
