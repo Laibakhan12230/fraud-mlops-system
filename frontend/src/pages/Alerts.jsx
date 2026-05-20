@@ -25,7 +25,7 @@ function Alerts() {
 
       const response =
         await axios.get(
-          "http://127.0.0.1:8000/alerts"
+          "https://fraud-mlops-system.onrender.com"
         );
 
       setAlerts(response.data);

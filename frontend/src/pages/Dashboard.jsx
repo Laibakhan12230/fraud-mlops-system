@@ -93,7 +93,7 @@ function Dashboard() {
 
       const response =
         await axios.get(
-          "http://127.0.0.1:8000/analytics"
+          "https://fraud-mlops-system.onrender.com"
         );
 
       setAnalytics(response.data);
@@ -149,7 +149,7 @@ function Dashboard() {
     const response =
       await axios.post(
 
-        "http://127.0.0.1:8000/predict",
+        "https://fraud-mlops-system.onrender.com",
 
         {
           features:
