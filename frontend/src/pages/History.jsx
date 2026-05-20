@@ -22,7 +22,7 @@ function History() {
     const email = localStorage.getItem("email");
 
 const response = await axios.get(
-  `https://fraud-mlops-system.onrender.com/${localStorage.getItem("email")}`
+  `https://fraud-mlops-system.onrender.com/history/${localStorage.getItem("email")}`
 );
       setHistory(response.data);
 

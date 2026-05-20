@@ -38,7 +38,7 @@ function Reports() {
 
       const response =
         await axios.get(
-          "https://fraud-mlops-system.onrender.com"
+          "https://fraud-mlops-system.onrender.com/report"
         );
 
       setReport(response.data);

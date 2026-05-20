@@ -25,7 +25,7 @@ function Alerts() {
 
       const response =
         await axios.get(
-          "https://fraud-mlops-system.onrender.com"
+          "https://fraud-mlops-system.onrender.com/alerts"
         );
 
       setAlerts(response.data);

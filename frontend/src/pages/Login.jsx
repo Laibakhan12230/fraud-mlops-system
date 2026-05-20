@@ -24,7 +24,7 @@ const handleLogin = async () => {
 
     const response = await axios.post(
 
-      "https://fraud-mlops-system.onrender.com",
+      "https://fraud-mlops-system.onrender.com/login",
 
       {
 
