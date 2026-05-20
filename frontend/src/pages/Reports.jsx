@@ -128,7 +128,7 @@ function Reports() {
   onClick={() =>
 
     window.open(
-      "http://127.0.0.1:8000/download-report"
+      "https://fraud-mlops-system.onrender.com/download-report"
     )
 
   }
