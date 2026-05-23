@@ -1,0 +1,15 @@
+User
+  ↓
+React Frontend
+  ↓
+FastAPI Backend API
+  ↓
+Fraud Detection Model (XGBoost)
+  ↓
+MongoDB Atlas Database
+  ↓
+MLflow Monitoring
+  ↓
+Drift Detection System
+  ↓
+Auto Retraining Pipeline
