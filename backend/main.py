@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from typing import List
+from fastapi import HTTPException
+from passlib.context import CryptContext
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -105,6 +107,7 @@ model = joblib.load(MODEL_PATH)
 class Transaction(BaseModel):
 
     features: List[float]
+    email: str
 
 
 # =========================
@@ -330,40 +333,72 @@ def generate_report():
 @app.post("/signup")
 async def signup(user: UserSignup):
 
-    # Empty password check
-    if not user.password.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Password cannot be empty"
-        )
-
-    # bcrypt max length validation
-    if len(user.password) > 72:
-        raise HTTPException(
-            status_code=400,
-            detail="Password too long (max 72 characters)"
-        )
-
     try:
 
-        # Hash password
+        # CHECK EXISTING USER
+        existing_user = users_collection.find_one({
+
+            "email": user.email
+
+        })
+
+        if existing_user:
+
+            raise HTTPException(
+
+                status_code=400,
+                detail="Email already exists"
+
+            )
+
+        # PASSWORD VALIDATION
+        if len(user.password) < 6:
+
+            raise HTTPException(
+
+                status_code=400,
+                detail="Password too short"
+
+            )
+
+        # BCRYPT SAFE LIMIT
+        safe_password = user.password[:72]
+
+        # HASH PASSWORD
         hashed_password = pwd_context.hash(
-            user.password
+            safe_password
         )
 
-        # Example response
-        return {
-            "message": "Signup successful",
+        # USER OBJECT
+        new_user = {
+
             "name": user.name,
             "email": user.email,
-            "hashed_password": hashed_password
+            "password": hashed_password
+
+        }
+
+        # INSERT INTO DATABASE
+        users_collection.insert_one(
+            new_user
+        )
+
+        return {
+
+            "message":
+            "Signup successful"
+
         }
 
     except Exception as e:
 
+        print(e)
+
         raise HTTPException(
+
             status_code=500,
             detail=str(e)
+
         )
 
 
