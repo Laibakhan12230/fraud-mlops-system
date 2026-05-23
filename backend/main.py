@@ -15,12 +15,12 @@ from typing import List
 import numpy as np
 import joblib
 
-from database.db import (
+from backend.database.db import (
     users_collection,
     prediction_collection
 )
 
-from auth import create_access_token
+from backend.auth import create_access_token
 
 
 # =========================
@@ -55,9 +55,19 @@ app.add_middleware(
 # =========================
 # LOAD MODEL
 # =========================
-model = joblib.load(
-    "saved_models/fraud_model.pkl"
+import os
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
 )
+
+MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "saved_models",
+    "fraud_model.pkl"
+)
+
+model = joblib.load(MODEL_PATH)
 
 # =========================
 # INPUT SCHEMA
