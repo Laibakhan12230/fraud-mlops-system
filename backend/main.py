@@ -327,68 +327,56 @@ def generate_report():
 @app.post("/signup")
 async def signup(user: UserSignup):
 
-    try:
+    existing_user = users_collection.find_one({
 
-        existing_user = users_collection.find_one({
+        "email": user.email
 
-            "email": user.email
+    })
 
-        })
+    if existing_user:
 
-        if existing_user:
-
-            raise HTTPException(
-
-                status_code=400,
-                detail="Email already exists"
-
-            )
-
-        if len(user.password) < 6:
-
-            raise HTTPException(
-
-                status_code=400,
-                detail="Password too short"
-
-            )
-
-        # HASH PASSWORD
-        hashed_password = hash_password(
-            user.password
-        )
-
-        new_user = {
-
-            "name": user.name,
-            "email": user.email,
-            "password": hashed_password
-
-        }
-
-        users_collection.insert_one(
-            new_user
-        )
-
-        return {
-
-            "message":
-            "Signup successful"
-
-        }
-
-    except HTTPException as e:
-        raise e
-
-    except Exception as e:
-        print(e)
         raise HTTPException(
 
-        status_code=500,
+            status_code=400,
 
-        detail="Signup failed"
+            detail="Email already exists"
 
+        )
+
+    if len(user.password) < 6:
+
+        raise HTTPException(
+
+            status_code=400,
+
+            detail="Password too short"
+
+        )
+
+    hashed_password = hash_password(
+        user.password
     )
+
+    new_user = {
+
+        "name": user.name,
+
+        "email": user.email,
+
+        "password": hashed_password
+
+    }
+
+    users_collection.insert_one(
+        new_user
+    )
+
+    return {
+
+        "message":
+        "Signup successful"
+
+    }
 
 
 # =========================
