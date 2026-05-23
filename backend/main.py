@@ -39,7 +39,16 @@ from security import (
     verify_password
 )
 
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
+# Request model
+class UserSignup(BaseModel):
+    name: str
+    email: str
+    password: str
 
 
 # =========================
@@ -319,40 +328,43 @@ def generate_report():
 # =========================
 
 @app.post("/signup")
-def signup(user: dict):
+async def signup(user: UserSignup):
 
-    existing_user = users_collection.find_one(
+    # Empty password check
+    if not user.password.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Password cannot be empty"
+        )
 
-        {
+    # bcrypt max length validation
+    if len(user.password) > 72:
+        raise HTTPException(
+            status_code=400,
+            detail="Password too long (max 72 characters)"
+        )
 
-            "email":
-            user["email"]
+    try:
 
-        }
+        # Hash password
+        hashed_password = pwd_context.hash(
+            user.password
+        )
 
-    )
-
-    if existing_user:
-
+        # Example response
         return {
-
-            "message":
-            "User already exists"
-
+            "message": "Signup successful",
+            "name": user.name,
+            "email": user.email,
+            "hashed_password": hashed_password
         }
 
-    hashed_password = hash_password(
-        user["password"]
-    )
-    user["password"] = hashed_password
-    users_collection.insert_one(user)
+    except Exception as e:
 
-    return {
-
-        "message":
-        "Signup successful"
-
-    }
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # =========================
