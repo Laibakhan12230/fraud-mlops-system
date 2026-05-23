@@ -15,12 +15,32 @@ from typing import List
 import numpy as np
 import joblib
 
-from backend.database.db import (
-    users_collection,
-    prediction_collection
+try:
+
+    from database.db import (
+        users_collection,
+        prediction_collection,
+        history_collection
+    )
+
+    from auth import create_access_token
+
+except:
+
+    from backend.database.db import (
+        users_collection,
+        prediction_collection,
+        history_collection
+    )
+
+    from backend.auth import create_access_token
+from security import (
+    hash_password,
+    verify_password
 )
 
-from backend.auth import create_access_token
+import mlflow
+from xgboost import XGBClassifier
 
 
 # =========================
@@ -322,6 +342,10 @@ def signup(user: dict):
 
         }
 
+    hashed_password = hash_password(
+        user["password"]
+    )
+    user["password"] = hashed_password
     users_collection.insert_one(user)
 
     return {
@@ -335,27 +359,36 @@ def signup(user: dict):
 # =========================
 # LOGIN ROUTE
 # =========================
-
 @app.post("/login")
 def login(user: dict):
 
     try:
 
-        existing_user = users_collection.find_one(
+        existing_user = users_collection.find_one({
 
-            {
+            "email":
+            user["email"]
 
-                "email":
-                user["email"],
+        })
 
-                "password":
-                user["password"]
+        if not existing_user:
+
+            return {
+
+                "message":
+                "Invalid credentials"
 
             }
 
+        password_valid = verify_password(
+
+            user["password"],
+
+            existing_user["password"]
+
         )
 
-        if not existing_user:
+        if not password_valid:
 
             return {
 
