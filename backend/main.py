@@ -73,13 +73,7 @@ app.add_middleware(
 # CORS
 # =========================
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 
 # =========================
@@ -335,7 +329,6 @@ async def signup(user: UserSignup):
 
     try:
 
-        # CHECK EXISTING USER
         existing_user = users_collection.find_one({
 
             "email": user.email
@@ -351,7 +344,6 @@ async def signup(user: UserSignup):
 
             )
 
-        # PASSWORD VALIDATION
         if len(user.password) < 6:
 
             raise HTTPException(
@@ -361,15 +353,11 @@ async def signup(user: UserSignup):
 
             )
 
-        # BCRYPT SAFE LIMIT
-        safe_password = user.password[:72]
-
         # HASH PASSWORD
-        hashed_password = pwd_context.hash(
-            safe_password
+        hashed_password = hash_password(
+            user.password
         )
 
-        # USER OBJECT
         new_user = {
 
             "name": user.name,
@@ -378,7 +366,6 @@ async def signup(user: UserSignup):
 
         }
 
-        # INSERT INTO DATABASE
         users_collection.insert_one(
             new_user
         )
