@@ -377,16 +377,18 @@ async def signup(user: UserSignup):
 
         }
 
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
-
         print(e)
-
         raise HTTPException(
 
-            status_code=500,
-            detail=str(e)
+        status_code=500,
 
-        )
+        detail="Signup failed"
+
+    )
 
 
 # =========================
