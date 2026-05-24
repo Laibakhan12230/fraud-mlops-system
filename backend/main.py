@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from typing import List
 from fastapi import HTTPException
-from passlib.context import CryptContext
+
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -41,10 +41,6 @@ from security import (
     verify_password
 )
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
 
 # Request model
 class UserSignup(BaseModel):
@@ -383,75 +379,65 @@ async def signup(user: UserSignup):
 # LOGIN ROUTE
 # =========================
 @app.post("/login")
-def login(user: dict):
+async def login(user: UserLogin):
 
-    try:
+    existing_user = users_collection.find_one({
 
-        existing_user = users_collection.find_one({
+        "email": user.email
 
-            "email":
-            user["email"]
+    })
 
-        })
+    if not existing_user:
 
-        if not existing_user:
+        raise HTTPException(
 
-            return {
+            status_code=401,
 
-                "message":
-                "Invalid credentials"
-
-            }
-
-        password_valid = verify_password(
-
-            user["password"],
-
-            existing_user["password"]
+            detail="Invalid Email"
 
         )
 
-        if not password_valid:
+    password_valid = verify_password(
 
-            return {
+        user.password,
 
-                "message":
-                "Invalid credentials"
+        existing_user["password"]
 
-            }
+    )
 
-        token = create_access_token(
+    if not password_valid:
 
-            {
+        raise HTTPException(
 
-                "sub":
-                user["email"]
+            status_code=401,
 
-            }
+            detail="Invalid Password"
 
         )
 
-        return {
+    token = create_access_token(
 
-            "access_token":
-            token,
+        {
 
-            "email":
-            user["email"]
-
-        }
-
-    except Exception as e:
-
-        print(e)
-
-        return {
-
-            "message":
-            "Login failed"
+            "sub":
+            user.email
 
         }
 
+    )
+
+    return {
+
+        "message":
+        "Login successful",
+
+        "access_token":
+        token,
+
+        "email":
+        user.email
+
+    }
 
 # =========================
 # DOWNLOAD PDF REPORT
