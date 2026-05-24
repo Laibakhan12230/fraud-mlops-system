@@ -147,24 +147,28 @@ async def predict(data: dict):
 
         risk_score = max(features)
         if risk_score > 500:
-            prediction = 1
-            probability = 0.96
+
+          prediction = 1
+          probability = 0.96
 
         elif risk_score > 100:
 
-            prediction = 1
-            probability = 0.72
+          prediction = 1
+          probability = 0.72
 
         else:
 
-            prediction = 0
-            probability = 0.09
+          prediction = 0
+          probability = 0.09
 
-        result = "Fraud Transaction"
 
-        if prediction == 0:
+        if prediction == 1:
 
-            result = "Safe Transaction"
+          result = "Fraud Transaction"
+
+        else:
+
+         result = "Safe Transaction"
 
         return {
 
