@@ -1,9 +1,9 @@
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
-
+from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
-
+from sklearn.metrics import confusion_matrix
 from xgboost import XGBClassifier
 
 import joblib
@@ -18,7 +18,22 @@ data = pd.read_csv(
     "../data/creditcard.csv"
 )
 
+roc_auc = roc_auc_score(
+    y_test,
+    y_pred
+)
 
+mlflow.log_metric(
+    "roc_auc",
+    roc_auc
+)
+
+cm = confusion_matrix(
+    y_test,
+    y_pred
+)
+
+print(cm)
 # FEATURES + TARGET
 
 X = data.drop("Class", axis=1)

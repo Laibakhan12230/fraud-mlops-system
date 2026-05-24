@@ -1,7 +1,7 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-
+from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     accuracy_score,
@@ -29,9 +29,15 @@ y = data["Class"]
 
 # TRAIN TEST SPLIT
 
+smote = SMOTE(random_state=42)
+
+X_resampled, y_resampled = smote.fit_resample(X, y)
+
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
+
+    X_resampled,
+    y_resampled,
+
     test_size=0.2,
     random_state=42
 )
@@ -62,7 +68,13 @@ with mlflow.start_run():
 
     # MODEL
 
-    model = XGBClassifier()
+    model = XGBClassifier(
+    n_estimators=200,
+    max_depth=6,
+    learning_rate=0.1,
+    random_state=42,
+    eval_metric="logloss"
+)
 
     model.fit(X_train, y_train)
 
