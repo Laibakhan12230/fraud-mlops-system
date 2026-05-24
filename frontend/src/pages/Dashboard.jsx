@@ -297,34 +297,33 @@ const severityData = [
 
               <h2>
 
-                {
-                  result.fraud_prediction === 1
-                    ? "🚨 Fraud Transaction"
-                    : "✅ Safe Transaction"
-                }
+{
+  result.prediction === "Fraud Transaction"
+    ? "🚨 Fraud Transaction"
+    : "✅ Safe Transaction"
+}
 
-              </h2>
+</h2>
 
-            <h3>
+<h3>
 
-  Fraud Probability:
+Fraud Probability:
 
-  {" "}
+{
 
-  {
+  result?.fraud_probability
 
-    result?.fraud_probability
-      ?
+    ?
 
-      (
-        result.fraud_probability * 100
-      ).toFixed(2)
+    (
+      result.fraud_probability * 100
+    ).toFixed(0)
 
-      :
+    :
 
-      "0"
+    "0"
 
-  }%
+}%
 
 </h3>
 
