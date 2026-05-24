@@ -130,85 +130,48 @@ def home():
 # =========================
 
 @app.post("/predict")
-def predict(transaction: Transaction):
+async def predict(data: dict):
 
     try:
 
-        # VALIDATION
-
-        if len(transaction.features) != 30:
-
-            return {
-
-                "message":
-                "Exactly 30 features required"
-
-            }
-
-        # CONVERT TO NUMPY
-
-        input_data = np.array(
-    transaction.features
-).reshape(1, -1)
-
-        # MODEL PREDICTION
-
-        prediction = model.predict(
-            input_data
-        )[0]
-
-        # FRAUD PROBABILITY
-
-        probability = model.predict_proba(
-            input_data
-        )[0][1]
-
-        # RESULT OBJECT
-
-        result = {
-
-            "features":
-            transaction.features,
-
-            "fraud_prediction":
-            int(prediction),
-
-            "fraud_probability":
-            float(probability),
-
-            "email":
-            transaction.email
-
-        }
-
-        # STORE IN DATABASE
-
-        prediction_collection.insert_one(
-            result
+        features = list(
+            map(float, data["features"])
         )
 
-        # RETURN RESPONSE
+        if len(features) != 30:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Exactly 30 features required"
+            )
+
+        prediction = model.predict([features])[0]
+
+        probability = model.predict_proba([features])[0][1]
+
+        result = "Fraud Transaction"
+
+        if prediction == 0:
+
+            result = "Safe Transaction"
 
         return {
 
-            "fraud_prediction":
-            int(prediction),
+            "prediction": result,
 
             "fraud_probability":
-            float(probability)
+            round(float(probability * 100), 2)
 
         }
 
     except Exception as e:
 
-        print(e)
+        print("PREDICTION ERROR:", e)
 
-        return {
-
-            "message":
-            str(e)
-
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # =========================
