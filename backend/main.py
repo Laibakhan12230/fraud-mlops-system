@@ -42,9 +42,19 @@ from security import (
 )
 
 
-# Request model
+# =========================
+# USER MODELS
+# =========================
+
 class UserSignup(BaseModel):
+
     name: str
+    email: str
+    password: str
+
+
+class UserLogin(BaseModel):
+
     email: str
     password: str
 
@@ -57,9 +67,9 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://fraud-mlops-system.onrender.com",
-        "https://fraud-mlops-system.vercel.app/"
-    ],
+    "https://fraud-mlops-system.onrender.com",
+    "https://fraud-mlops-system.vercel.app"
+],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
