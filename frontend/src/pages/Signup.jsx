@@ -78,13 +78,24 @@ function Signup() {
 
       } catch (error) {
 
-        console.log(error);
+  console.log(error);
 
-        alert(
-          "Signup Failed"
-        );
+  if (error.response) {
 
-      }
+    alert(
+      error.response.data.detail ||
+      "Signup Failed"
+    );
+
+  }
+
+  else {
+
+    alert("Server Error");
+
+  }
+
+}
 
     };
 

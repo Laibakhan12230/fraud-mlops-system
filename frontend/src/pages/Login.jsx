@@ -68,11 +68,24 @@ const handleLogin = async () => {
 
   catch (error) {
 
-    console.log(error);
+  console.log(error);
 
-    alert("Login Failed");
+  if (error.response) {
+
+    alert(
+      error.response.data.detail ||
+      "Login Failed"
+    );
 
   }
+
+  else {
+
+    alert("Server Error");
+
+  }
+
+}
 
 };
   return (
